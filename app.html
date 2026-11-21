@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Math Study</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d0f14">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --bg:#0d0f14; --panel:#161a22; --panel2:#1c212b; --line:#262c38; --text:#e8ebf2; --dim:#8b93a7; --accent:#6c8cff; --bad:#ff6b6b; --good:#4ade80; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; padding:24px 16px 48px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  h1 { font-size:22px; margin:0; letter-spacing:.3px; }
+  button { font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; padding:8px 14px; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  button:disabled { opacity:.5; cursor:default; }
+  .lock { max-width:420px; margin:12vh auto 0; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:28px; text-align:center; }
+  .lock p { color:var(--dim); margin:6px 0 20px; }
+  .lock #code { width:100%; font:600 18px/1 ui-monospace,Consolas,monospace; letter-spacing:2px; text-align:center; text-transform:uppercase;
+    padding:14px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); margin-bottom:12px; }
+  .lock #code:focus { outline:none; border-color:var(--accent); }
+  .lock button { width:100%; padding:12px; }
+  .lock .field { width:100%; font:inherit; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); margin-bottom:10px; }
+  .lock .field:focus { outline:none; border-color:var(--accent); }
+  .lock #code { font-size:15px; letter-spacing:1px; padding:12px; }
+  .lock .small { font-size:12px; margin:-4px 0 12px; }
+  .authtabs { display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:4px; margin:14px 0 16px; }
+  .lock .authtabs button { border:0; background:none; color:var(--dim); padding:8px; border-radius:7px; font-weight:600; }
+  .lock .authtabs button.on { background:var(--panel2); color:var(--text); }
+  .who { color:var(--dim); font-size:13px; margin-left:10px; font-weight:400; }
+  .msg { min-height:22px; margin-top:12px; font-size:14px; }
+  .msg.bad { color:var(--bad); } .msg.good { color:var(--good); }
+  .buy { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); color:var(--dim); font-size:14px; }
+  .buy a { color:var(--accent); font-weight:600; text-decoration:none; word-break:break-all; display:inline-block; margin:6px 6px 0 0; }
+  .buy a:hover { text-decoration:underline; }
+  .lock .buy button { width:auto; padding:3px 10px; font-size:12px; }
+
+  nav.tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:20px; overflow-x:auto; }
+  nav.tabs button { border:0; border-bottom:2px solid transparent; border-radius:0; background:none; color:var(--dim); padding:10px 16px; font-weight:600; white-space:nowrap; }
+  nav.tabs button:hover { color:var(--text); }
+  nav.tabs button.on { color:var(--text); border-bottom-color:var(--accent); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .card .name { font-weight:600; word-break:break-word; }
+  .card .meta { color:var(--dim); font-size:12px; }
+  .card .new { margin-left:8px; font-size:10px; font-weight:700; letter-spacing:.5px; color:#fff; background:var(--good); color:#06240f; border-radius:4px; padding:1px 6px; vertical-align:middle; }
+  .card button { margin-top:auto; }
+  .empty { color:var(--dim); text-align:center; padding:60px 16px; border:1px dashed var(--line); border-radius:12px; }
+
+  .ai { display:flex; flex-direction:column; height:calc(100vh - 170px); min-height:420px; }
+  .modes { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .modes button { padding:6px 12px; font-size:13px; border-radius:999px; }
+  .modes button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .modes .spacer { flex:1; }
+  .chat { flex:1; overflow-y:auto; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .bubble { max-width:85%; padding:10px 14px; border-radius:12px; word-wrap:break-word; }
+  .bubble.user { align-self:flex-end; background:var(--accent); color:#fff; white-space:pre-wrap; }
+  .bubble.assistant { align-self:flex-start; background:var(--panel2); border:1px solid var(--line); }
+  .bubble.err { color:var(--bad); }
+  .bubble p { margin:0 0 8px; } .bubble p:last-child { margin-bottom:0; }
+  .bubble h3, .bubble h4, .bubble h5, .bubble h6 { margin:12px 0 6px; font-size:15px; }
+  .bubble ul, .bubble ol { margin:4px 0 8px; padding-left:22px; }
+  .bubble code { background:#0003; padding:1px 5px; border-radius:4px; font-family:ui-monospace,Consolas,monospace; font-size:13px; }
+  .bubble pre { background:#0005; padding:10px; border-radius:8px; overflow-x:auto; }
+  .bubble pre code { background:none; padding:0; }
+  .bubble hr { border:0; border-top:1px solid var(--line); margin:10px 0; }
+  .bubble .copy { margin-top:8px; padding:3px 10px; font-size:12px; }
+  .thinking { color:var(--dim); font-style:italic; }
+  .hello { color:var(--dim); text-align:center; margin:auto; max-width:420px; }
+  .hello b { color:var(--text); }
+  .composer { display:flex; gap:8px; margin-top:10px; }
+  .composer textarea { flex:1; resize:none; min-height:48px; max-height:200px; overflow-y:hidden; font:inherit; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .composer textarea:focus { outline:none; border-color:var(--accent); }
+  .composer button { align-self:flex-end; padding:12px 18px; }
+  .composer .iconbtn { padding:12px; color:var(--dim); display:flex; }
+  .composer .iconbtn:hover { color:var(--text); }
+  .attach { display:flex; align-items:center; gap:10px; margin-top:10px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px; color:var(--dim); font-size:13px; }
+  .attach img { height:56px; max-width:120px; object-fit:cover; border-radius:6px; }
+  .attach span { flex:1; }
+  .attach button { padding:4px 10px; }
+  .bubble.user img { display:block; max-width:260px; max-height:260px; border-radius:8px; margin-bottom:6px; }
+  .ai.dragging .chat { border-color:var(--accent); border-style:dashed; }
+  .note { color:var(--dim); font-size:12px; margin-top:6px; text-align:center; }
+
+  .overlay { position:fixed; inset:0; background:#000; display:none; flex-direction:column; z-index:10; }
+  .overlay.on { display:flex; }
+  .disc { position:fixed; inset:0; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; z-index:20; padding:16px; }
+  .disc > div { max-width:520px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px; }
+  .disc h2 { margin:0 0 10px; font-size:20px; }
+  .disc ul { margin:0 0 16px; padding-left:20px; color:var(--dim); }
+  .disc li { margin:4px 0; }
+  .disc > div { max-height:92vh; overflow:auto; }
+  .dlab { display:block; font-size:13px; color:var(--dim); margin:10px 0 4px; }
+  .dname { width:100%; box-sizing:border-box; }
+  .dpad { width:100%; height:130px; background:#fff; border-radius:8px; touch-action:none; cursor:crosshair; display:block; }
+  .dclear { float:right; color:var(--accent); font-size:13px; }
+  .bar { display:flex; gap:8px; align-items:center; padding:8px; background:var(--panel); border-bottom:1px solid var(--line); }
+  .bar .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-left:6px; }
+  .stage { flex:1; display:flex; align-items:center; justify-content:center; min-height:0; }
+  .stage iframe { width:100%; height:100%; border:0; background:#fff; }
+  .stage video, .stage img { max-width:100%; max-height:100%; }
+  .suggest { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .suggest p { color:var(--dim); margin:4px 0 10px; }
+  .mailrow { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .mailrow code { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:14px; }
+  .prow { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .prow label { width:52px; color:var(--dim); font-size:13px; }
+  .prow input { flex:1; min-width:200px; font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .prow input:focus { outline:none; border-color:var(--accent); }
+  .keycap { font-family:ui-monospace,Consolas,monospace; min-width:110px; }
+  .keycap.listening { border-color:var(--accent); color:var(--accent); }
+  .phint { color:var(--dim); font-size:12px; }
+  .proxy { max-width:620px; margin:8vh auto 0; text-align:center; }
+  .proxy h2 { margin:0 0 6px; font-size:22px; }
+  .proxy p { color:var(--dim); margin:0 0 18px; }
+  .pnote { margin:14px 0 4px; padding:12px 16px; text-align:left; white-space:pre-wrap; word-wrap:break-word; font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--text, #e8e8ea); background:rgba(255,255,255,0.05); border-radius:10px; }
+  .pbar { display:flex; gap:8px; }
+  .pbar input { flex:1; min-width:0; font:inherit; font-size:16px; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .pbar input:focus { outline:none; border-color:var(--accent); }
+  .pbar button { padding:12px 20px; }
+  .quick { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+  .quick button { font-size:13px; padding:6px 12px; border-radius:999px; }
+  .bar input.addr { flex:1; min-width:0; font:inherit; font-size:14px; color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+  .bar input.addr:focus { outline:none; border-color:var(--accent); }
+  .bar .nav { padding:6px 10px; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="lockView" class="lock">
+    <h1 data-nl>Math Study</h1>
+    <div class="authtabs">
+      <button id="tabLogin" class="on">Log in</button>
+      <button id="tabSignup">Create account</button>
+    </div>
+    <form id="authForm" autocomplete="on" onsubmit="return false">
+      <input id="username" class="field" placeholder="Username" autocomplete="username" spellcheck="false" maxlength="20">
+      <input id="password" class="field" type="password" placeholder="Password" autocomplete="current-password" maxlength="100">
+      <div id="signupOnly" class="hidden">
+        <input id="password2" class="field" type="password" placeholder="Repeat password" autocomplete="new-password" maxlength="100">
+        <input id="code" maxlength="19" placeholder="ACCESS CODE: XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
+        <p class="small">Your code gets locked to this account and this computer. Nobody else can use it.</p>
+      </div>
+      <button id="unlock" class="primary" type="submit">Log in</button>
+    </form>
+    <div id="msg" class="msg"></div>
+    <div id="buyBox" class="buy hidden">
+      Don't have a code? Email to buy one:<br>
+      <a id="buyMail"></a>
+      <button id="buyCopy">Copy</button>
+    </div>
+  </div>
+
+  <div id="mainView" class="hidden">
+    <header>
+      <h1><span data-nl>Math Study</span><span id="who" class="who"></span></h1>
+      <div style="display:flex;gap:8px">
+        <button id="panicBtn" title="Panic button settings">Panic key</button>
+        <button id="suggestBtn" class="hidden">Suggestions</button>
+        <button id="logout">Log out</button>
+      </div>
+    </header>
+    <div id="panicBox" class="suggest hidden">
+      <b>Panic button</b>
+      <p>Press your panic key and this page instantly turns into the website below (pressing Back won't bring it back).</p>
+      <div class="prow">
+        <label>Key</label>
+        <button id="panicKey" class="keycap">Not set</button>
+        <span id="panicHint" class="phint">Click, then press a key or combo</span>
+      </div>
+      <div class="prow">
+        <label>Opens</label>
+        <input id="panicUrl" type="text" placeholder="https://classroom.google.com" spellcheck="false">
+      </div>
+      <div class="prow">
+        <label></label>
+        <button id="panicSave" class="primary">Save</button>
+        <button id="panicTest">Test it</button>
+        <button id="panicOff">Turn off</button>
+        <span id="panicMsg" class="phint"></span>
+      </div>
+    </div>
+    <div id="suggestBox" class="suggest hidden">
+      <b>Got an idea, a request or a bug?</b>
+      <p>Want a game added, or something fixed? Email me:</p>
+      <div class="mailrow">
+        <code id="mailAddr"></code>
+        <button id="mailCopy">Copy</button>
+        <a id="mailOpen"><button class="primary">Open email</button></a>
+      </div>
+    </div>
+    <nav id="tabs" class="tabs"></nav>
+    <div id="list"></div>
+
+    <div id="proxyPanel" class="proxy hidden">
+      <h2>Proxy</h2>
+      <p>Type a website or search for anything. It opens right here in the app.</p>
+      <form id="proxyForm" class="pbar" onsubmit="return false">
+        <input id="proxyInput" placeholder="Search or type a website (e.g. wikipedia.org)" spellcheck="false" autocomplete="off">
+        <button class="primary" type="submit">Go</button>
+      </form>
+      <div id="proxyNote" class="pnote hidden"></div>
+      <div class="quick" id="proxyQuick">
+        <button data-url="https://search.brave.com/">Brave Search</button>
+        <button data-url="https://en.wikipedia.org/">Wikipedia</button>
+        <button data-url="https://www.reddit.com/">Reddit</button>
+        <button data-url="https://news.ycombinator.com/">Hacker News</button>
+      </div>
+      <div id="proxyMsg" class="msg"></div>
+      <div class="note">Simple sites work best. Big sites with logins or video players (like YouTube or Google) might not work.</div>
+    </div>
+
+    <div id="aiPanel" class="ai hidden">
+      <div class="modes" id="modes">
+        <button data-mode="chat" class="on">Ask</button>
+        <button data-mode="explain">Explain</button>
+        <button data-mode="essay">Write essay</button>
+        <button data-mode="analyze">Analyze text</button>
+        <button data-mode="summarize">Summarize</button>
+        <button data-mode="grammar">Fix grammar</button>
+        <span class="spacer"></span>
+        <button id="newChat">New chat</button>
+      </div>
+      <div id="chat" class="chat"></div>
+      <div id="attachPreview" class="attach hidden">
+        <img id="attachImg" alt="">
+        <span>Picture attached</span>
+        <button id="attachRemove" title="Remove picture">✕</button>
+      </div>
+      <div class="composer">
+        <button id="attachBtn" class="iconbtn" title="Add a picture">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </button>
+        <textarea id="prompt" rows="1" placeholder="Ask any school question..."></textarea>
+        <button id="send" class="primary">Send</button>
+      </div>
+      <div class="note">AI can make mistakes. Double-check important facts. Paste (Ctrl+V) or drop a picture to ask about it.</div>
+      <input id="imgPick" type="file" accept="image/*" class="hidden">
+    </div>
+  </div>
+</div>
+
+<div id="disclaimer" class="disc hidden"><div>
+  <h2>Before you start</h2>
+  <ul>
+    <li>Use everything in here at your own risk.</li>
+    <li>The Proxy and any links open other people's websites. I don't own or control them and I'm not responsible for what's on them.</li>
+    <li>Follow your school's and your network's rules. If you get in trouble for using this, that's on you, not me.</li>
+    <li>Everything is provided as it is, with no promises that it always works.</li>
+    <li>Using any of these tools is 100% your own choice. Nobody is forcing you or telling you to use them.</li>
+    <li>You know using them at school or on a blocked network could get you in trouble, and you're choosing to use them anyway.</li>
+    <li>If you get caught, you take full responsibility. It is not the seller's fault and you won't blame or name the seller.</li>
+  </ul>
+  <label class="dlab" for="discName">Your full name</label>
+  <input id="discName" class="dname" maxlength="60" autocomplete="name" placeholder="First and last name">
+  <div class="dlab">Sign here <a href="#" id="discClear" class="dclear">clear</a></div>
+  <canvas id="discPad" class="dpad" width="900" height="260"></canvas>
+  <div id="discMsg" class="msg"></div>
+  <button class="primary" id="discOk" style="width:100%">I agree and sign</button>
+</div></div>
+<div id="overlay" class="overlay">
+  <div class="bar">
+    <button id="pvBack" class="nav pv hidden" title="Back">←</button>
+    <button id="pvFwd" class="nav pv hidden" title="Forward">→</button>
+    <button id="pvReload" class="nav pv hidden" title="Reload">⟳</button>
+    <input id="pvAddr" class="addr pv hidden" spellcheck="false" autocomplete="off">
+    <span id="ovTitle" class="t"></span>
+    <button id="ovFull">Fullscreen</button>
+    <button id="ovClose">Close</button>
+  </div>
+  <div id="stage" class="stage"></div>
+</div>
+
+
+<script>
+const API = "https://math-study.mathstudyhelp.workers.dev";
+const LIB = "https://math-study-library.mathstudyhelp.workers.dev";
+const CONTACT = "";
+const CHUNK = 4 * 1024 * 1024;
+const $ = (id) => document.getElementById(id);
+let KEY = null, CODE = null, ITEMS = [], currentUrl = null, TAB = null;
+
+function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { return null; } }
+
+function deviceId() {
+  let d = store("gv_device");
+  if (!d || !/^[a-f0-9]{64}$/.test(d)) {
+    d = [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, "0")).join("");
+    store("gv_device", d);
+    if (store("gv_device") !== d) return null; // storage blocked
+  }
+  return d;
+}
+
+function b64ToBytes(b64) {
+  const bin = atob(b64); const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function hexToBytes(h) { return new Uint8Array(h.match(/../g).map(x => parseInt(x, 16))); }
+function fmtSize(n) { return n > 1e9 ? (n / 1e9).toFixed(1) + " GB" : n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.ceil(n / 1e3) + " KB"; }
+
+// source = async (start, end) => Uint8Array
+async function decrypt(prefixB64, total, source) {
+  const prefix = b64ToBytes(prefixB64), parts = [];
+  for (let i = 0, off = 0; off < total; i++) {
+    const end = Math.min(off + CHUNK + 16, total);
+    const iv = new Uint8Array(12); iv.set(prefix, 0); new DataView(iv.buffer).setUint32(8, i);
+    parts.push(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, KEY, await source(off, end)));
+    off = end;
+  }
+  return parts;
+}
+
+function setMsg(text, cls) { $("msg").textContent = text; $("msg").className = "msg " + (cls || ""); }
+
+/* ---------- accounts ---------- */
+let TOKEN = null, signup = false;
+const LOGIN_ERRORS = {
+  wrong_login: "Wrong username or password.",
+  other_device: "This account is locked to another computer. Got a new one? Email the seller.",
+  account_gone: "This account has been removed.",
+  username_taken: "That username is taken. Try another one.",
+  bad_username: "Username must be 3-20 letters, numbers or _ (no spaces).",
+  code_taken: "That code has already been used to make an account.",
+  invalid_code: "That access code isn't valid.",
+  slow_down: "Too many tries. Wait a minute and try again.",
+  logged_out: "Please log in again.",
+};
+
+function toHex(buf) { return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join(""); }
+// Slow on purpose, so a stolen password list would be useless. The real password never leaves this computer.
+async function passHash(username, password) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", iterations: 150000,
+    salt: new TextEncoder().encode("gv-vault:" + username.toLowerCase()) }, base, 256);
+  return toHex(bits);
+}
+async function api(path, body) {
+  const res = await fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return res.json();
+}
+
+function setAuthMode(isSignup) {
+  signup = isSignup;
+  $("tabLogin").classList.toggle("on", !signup); $("tabSignup").classList.toggle("on", signup);
+  $("signupOnly").classList.toggle("hidden", !signup);
+  $("unlock").textContent = signup ? "Create account" : "Log in";
+  $("password").autocomplete = signup ? "new-password" : "current-password";
+  setMsg("");
+}
+
+async function enterVault(data) {
+  KEY = await crypto.subtle.importKey("raw", hexToBytes(data.key), "AES-GCM", false, ["decrypt"]);
+  // the library list lives online, so new stuff shows up without a new vault file
+  const res = await fetch(LIB + "/catalog.bin?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) throw new Error("library");
+  const raw = new Uint8Array(await res.arrayBuffer());
+  const prefix = btoa(String.fromCharCode(...raw.subarray(0, 8)));
+  const cat = raw.subarray(8);
+  const parts = await decrypt(prefix, cat.length, async (s, e) => cat.subarray(s, e));
+  const all = JSON.parse(await new Blob(parts).text());
+  const note = all.find((it) => it.section === "__note");
+  $("proxyNote").textContent = note ? note.text : "";
+  $("proxyNote").classList.toggle("hidden", !note);
+  ITEMS = all.filter((it) => it.section !== "__note").sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+  if (data.token) { TOKEN = data.token; store("gv_token", TOKEN); }
+  $("who").textContent = data.username ? "· " + data.username : "";
+  showDisclaimer(data.agreed);
+  render();
+}
+
+async function submitAuth() {
+  const device = deviceId();
+  if (!device) return setMsg("This browser is blocking storage, so the app can't run here. Try normal (not incognito) mode.", "bad");
+  const username = $("username").value.trim().toLowerCase(), password = $("password").value;
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) return setMsg(LOGIN_ERRORS.bad_username, "bad");
+  if (password.length < 6) return setMsg("Password must be at least 6 characters.", "bad");
+  let code = "";
+  if (signup) {
+    if (password !== $("password2").value) return setMsg("The two passwords don't match.", "bad");
+    code = $("code").value.trim();
+    if (code.replace(/[^A-Z0-9]/gi, "").length !== 16) return setMsg("Enter your 16-character access code.", "bad");
+  }
+  $("unlock").disabled = true; setMsg(signup ? "Creating your account..." : "Logging in...");
+  try {
+    const pass = await passHash(username, password);
+    const data = signup ? await api("/register", { username, pass, code, device }) : await api("/login", { username, pass, device });
+    if (!data.ok) return setMsg(LOGIN_ERRORS[data.error] || "Couldn't log in (" + data.error + ").", "bad");
+    $("password").value = ""; $("password2").value = ""; $("code").value = "";
+    await enterVault(data);
+  } catch (e) {
+    setMsg("Can't reach the server. Check your internet and try again.", "bad");
+  } finally { $("unlock").disabled = false; }
+}
+
+async function resumeSession(token) {
+  setMsg("Logging you back in...");
+  try {
+    const data = await api("/session", { token, device: deviceId() });
+    if (!data.ok) { store("gv_token", null); return setMsg(data.error === "logged_out" ? "" : LOGIN_ERRORS[data.error] || "", data.error === "logged_out" ? "" : "bad"); }
+    TOKEN = token;
+    await enterVault(data);
+  } catch { setMsg("Can't reach the server. Check your internet and try again.", "bad"); }
+}
+
+/* ---------- tabs + library ---------- */
+// Everyone signs the disclaimer once (typed name + drawn signature). The server keeps the signed copy.
+function showDisclaimer(agreed) {
+  if (agreed) return;
+  $("disclaimer").classList.remove("hidden");
+  const pad = $("discPad"), g = pad.getContext("2d");
+  let drawing = false, inked = 0, last = null;
+  const clear = () => { g.fillStyle = "#fff"; g.fillRect(0, 0, pad.width, pad.height); inked = 0; };
+  clear();
+  g.lineWidth = 5; g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = "#111";
+  const at = (e) => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * pad.width / r.width, (e.clientY - r.top) * pad.height / r.height]; };
+  pad.onpointerdown = (e) => { drawing = true; last = at(e); pad.setPointerCapture(e.pointerId); e.preventDefault(); };
+  pad.onpointermove = (e) => {
+    if (!drawing) return;
+    const p = at(e);
+    g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke();
+    inked += Math.hypot(p[0] - last[0], p[1] - last[1]); last = p;
+  };
+  pad.onpointerup = pad.onpointercancel = () => { drawing = false; };
+  $("discClear").onclick = (e) => { e.preventDefault(); clear(); };
+  $("discOk").onclick = async () => {
+    const name = $("discName").value.replace(/\s+/g, " ").trim();
+    const msg = (t) => { $("discMsg").textContent = t; $("discMsg").className = "msg bad"; };
+    if (name.length < 3 || !name.includes(" ")) return msg("Type your first and last name.");
+    if (inked < 120) return msg("Sign in the white box first.");
+    $("discOk").disabled = true; $("discMsg").textContent = "Saving..."; $("discMsg").className = "msg";
+    try {
+      const d = await api("/agree", { token: TOKEN, device: deviceId(), name, signature: pad.toDataURL("image/png") });
+      if (!d.ok) return msg(d.error === "bad_signature" ? "Sign again, a bit bigger." : d.error === "bad_name" ? "Type your first and last name." : "Couldn't save. Try again.");
+      $("disclaimer").classList.add("hidden");
+    } catch { msg("Can't reach the server. Check your internet and try again."); }
+    finally { $("discOk").disabled = false; }
+  };
+}
+
+function render() {
+  $("lockView").classList.add("hidden"); $("mainView").classList.remove("hidden");
+  const sections = { Games: [] };
+  for (const it of ITEMS) if (it.section !== "Movies") (sections[it.section] ||= []).push(it);
+  const names = [...Object.keys(sections), "Proxy", "AI"];
+  const nav = $("tabs"); nav.innerHTML = "";
+  for (const n of names) {
+    const b = document.createElement("button"); b.textContent = n === "AI" ? "AI Helper" : n; b.dataset.tab = n;
+    b.onclick = () => showTab(n, sections);
+    nav.appendChild(b);
+  }
+  const saved = store("gv_tab");
+  showTab(names.includes(saved) ? saved : "Games", sections);
+}
+
+function showTab(name, sections) {
+  TAB = name; store("gv_tab", name);
+  for (const b of $("tabs").children) b.classList.toggle("on", b.dataset.tab === name);
+  const isAI = name === "AI", isProxy = name === "Proxy";
+  $("aiPanel").classList.toggle("hidden", !isAI);
+  $("proxyPanel").classList.toggle("hidden", !isProxy);
+  $("list").classList.toggle("hidden", isAI || isProxy);
+  if (isAI) { if (!$("chat").children.length) resetChat(); $("prompt").focus(); return; }
+  if (isProxy) { $("proxyInput").focus(); return; }
+
+  const list = $("list"); list.innerHTML = "";
+  const items = sections[name] || [];
+  if (!items.length) {
+    const e = document.createElement("div"); e.className = "empty";
+    e.textContent = "No " + name.toLowerCase() + " here yet. Check back soon!";
+    list.appendChild(e); return;
+  }
+  const verb = { play: "Play", video: "Watch", audio: "Listen", image: "View", download: "Download" };
+  const grid = document.createElement("div"); grid.className = "grid"; list.appendChild(grid);
+  for (const it of items) {
+    const card = document.createElement("div"); card.className = "card";
+    const n = document.createElement("div"); n.className = "name"; n.textContent = it.name;
+    if (it.addedAt && Date.now() - it.addedAt < 7 * 864e5) { const nb = document.createElement("span"); nb.className = "new"; nb.textContent = "NEW"; n.appendChild(nb); }
+    const m = document.createElement("div"); m.className = "meta"; m.textContent = it.ext.toUpperCase() + " · " + fmtSize(it.size);
+    const b = document.createElement("button"); b.className = "primary"; b.textContent = verb[it.kind];
+    b.onclick = () => openItem(it, b);
+    card.append(n, m, b); grid.appendChild(card);
+  }
+}
+
+const opened = new Map(); // already-unlocked small items, so opening them again is instant
+
+// Downloads an item's encrypted pieces from the library and unlocks them one by one.
+async function fetchItem(it, onProgress) {
+  const prefix = b64ToBytes(it.prefix), parts = [];
+  for (let n = 0; n < it.chunks; n++) {
+    let res, tries = 0;
+    for (;;) {
+      try { res = await fetch(LIB + "/i/" + it.id + "/" + n); if (res.ok) break; } catch {}
+      if (++tries >= 3) throw new Error("download");
+      await new Promise(r => setTimeout(r, 800 * tries));
+    }
+    const iv = new Uint8Array(12); iv.set(prefix, 0); new DataView(iv.buffer).setUint32(8, n);
+    parts.push(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, KEY, await res.arrayBuffer()));
+    onProgress((n + 1) / it.chunks);
+  }
+  return new Blob(parts, { type: it.mime });
+}
+
+async function openItem(it, btn) {
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "Loading...";
+  try {
+    let blob = opened.get(it.id);
+    if (!blob) {
+      blob = await fetchItem(it, (p) => { btn.textContent = it.chunks > 1 ? "Loading " + Math.floor(p * 100) + "%" : "Loading..."; });
+      if (it.size < 150e6) opened.set(it.id, blob);
+    }
+    show(it, blob);
+  } catch (e) {
+    alert("Couldn't load \"" + it.name + "\". Check your internet and try again.");
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+
+async function show(it, blob) {
+  if (it.kind === "download") {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = it.file;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    return;
+  }
+  const stage = $("stage"); stage.innerHTML = "";
+  if (it.kind === "play") {
+    const f = document.createElement("iframe");
+    f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock allow-forms allow-modals allow-popups");
+    f.setAttribute("allow", "fullscreen; autoplay; gamepad");
+    // games run in their own frame, so listen for the panic key inside it too
+    f.onload = () => { try { f.contentWindow.addEventListener("keydown", onPanicKey, true); } catch {} };
+    f.srcdoc = await blob.text();
+    stage.appendChild(f);
+  } else {
+    currentUrl = URL.createObjectURL(blob);
+    const el = document.createElement(it.kind === "image" ? "img" : it.kind);
+    el.src = currentUrl;
+    if (it.kind !== "image") { el.controls = true; el.autoplay = true; }
+    stage.appendChild(el);
+  }
+  $("ovTitle").textContent = it.name;
+  $("overlay").classList.add("on");
+}
+
+function closeOverlay() {
+  $("overlay").classList.remove("on"); $("stage").innerHTML = "";
+  proxyMode(false);
+  if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+  if (document.fullscreenElement) document.exitFullscreen();
+}
+
+/* ---------- proxy ---------- */
+const PROXY = "https://math-study-proxy.skyotter4926.workers.dev";
+let proxyPass = null, proxyFrame = null; // { ticket, until }
+
+async function getProxyPass() {
+  if (proxyPass && proxyPass.until > Date.now()) return proxyPass.ticket;
+  const d = await api("/proxy-ticket", { token: TOKEN, device: deviceId() });
+  if (!d.ok) throw new Error(d.error || "proxy");
+  proxyPass = { ticket: d.ticket, until: Date.now() + (d.hours - 1) * 36e5 };
+  return d.ticket;
+}
+
+// "wikipedia.org" -> https://wikipedia.org/, "how do volcanoes work" -> a search
+function toAddress(text) {
+  const t = text.trim();
+  if (!t) return null;
+  if (/^https?:\/\//i.test(t)) { try { return new URL(t).href; } catch {} }
+  if (!/\s/.test(t) && /^[\w-]+(\.[\w-]+)+(:\d+)?([/?#].*)?$/.test(t)) { try { return new URL("https://" + t).href; } catch {} }
+  return "https://search.brave.com/search?q=" + encodeURIComponent(t);
+}
+function proxyLink(ticket, address) {
+  const u = new URL(address);
+  return PROXY + "/s/" + ticket + "/" + u.protocol.slice(0, -1) + "/" + u.host + u.pathname + u.search + u.hash;
+}
+
+function proxyMode(on) {
+  for (const el of document.querySelectorAll(".pv")) el.classList.toggle("hidden", !on);
+  $("ovTitle").classList.toggle("hidden", on);
+  if (!on) { proxyFrame = null; pvHist = []; pvPos = -1; pvJump = false; }
+}
+
+async function openProxy(text) {
+  const address = toAddress(text);
+  if (!address) return;
+  $("proxyMsg").textContent = ""; $("proxyMsg").className = "msg";
+  if (!PROXY || PROXY.startsWith("__")) { $("proxyMsg").textContent = "The proxy isn't set up yet."; $("proxyMsg").className = "msg bad"; return; }
+  let ticket;
+  try { ticket = await getProxyPass(); }
+  catch (e) { $("proxyMsg").textContent = LOGIN_ERRORS[e.message] || "Can't reach the server. Check your internet and try again."; $("proxyMsg").className = "msg bad"; return; }
+  if (!proxyFrame) {
+    const stage = $("stage"); stage.innerHTML = "";
+    proxyFrame = document.createElement("iframe");
+    // no allow-top-navigation, so a site can't kick you out of the vault
+    proxyFrame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-downloads");
+    proxyFrame.setAttribute("allow", "fullscreen; autoplay; clipboard-write");
+    stage.appendChild(proxyFrame);
+    proxyMode(true);
+    $("overlay").classList.add("on");
+  }
+  $("pvAddr").value = address;
+  const link = proxyLink(ticket, address);
+  // replace() keeps proxy pages out of the vault's own Back history
+  if (proxyFrame.src) { try { proxyFrame.contentWindow.location.replace(link); } catch { proxyFrame.src = link; } }
+  else proxyFrame.src = link;
+}
+
+// our own back/forward list (the browser's would step back out of the vault)
+let pvHist = [], pvPos = -1, pvJump = false;
+function pvGo(step) {
+  const p = pvPos + step;
+  if (p < 0 || p >= pvHist.length) return;
+  pvPos = p; pvJump = true; openProxy(pvHist[p]);
+}
+
+window.addEventListener("message", (e) => {
+  if (!proxyFrame || e.source !== proxyFrame.contentWindow || !e.data || !e.data.gvProxy) return;
+  const d = e.data;
+  if (typeof d.url === "string") {
+    if (document.activeElement !== $("pvAddr")) $("pvAddr").value = d.url;
+    if (pvJump) pvJump = false;
+    else if (pvHist[pvPos] !== d.url) { pvHist = pvHist.slice(0, pvPos + 1); pvHist.push(d.url); pvPos = pvHist.length - 1; }
+  }
+  if (typeof d.key === "string" && panic.key && panic.url && !listening) {
+    const combo = comboOf(d);
+    if (combo && combo === panic.key && !(combo.length === 1 && d.typing)) goPanic();
+  }
+});
+// Web version only (not the Algebra Notes app): pressing Enter also pops Wikipedia open in a new tab
+// (it gets the focus), while the page you asked for keeps loading here.
+const IS_APP = /Electron/i.test(navigator.userAgent);
+const DECOYS = ["Algebra", "Linear_equation", "Quadratic_equation", "Polynomial", "Fraction", "Pythagorean_theorem", "Geometry", "Trigonometry"];
+function decoyTab(text) {
+  if (IS_APP || !String(text || "").trim()) return;
+  try { window.open("https://en.wikipedia.org/wiki/" + DECOYS[Math.floor(Math.random() * DECOYS.length)], "_blank"); } catch {}
+}
+$("proxyForm").addEventListener("submit", (e) => { e.preventDefault(); decoyTab($("proxyInput").value); openProxy($("proxyInput").value); });
+for (const b of $("proxyQuick").querySelectorAll("[data-url]")) b.onclick = () => openProxy(b.dataset.url);
+$("pvAddr").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); decoyTab($("pvAddr").value); openProxy($("pvAddr").value); $("pvAddr").blur(); } });
+$("pvBack").onclick = () => pvGo(-1);
+$("pvFwd").onclick = () => pvGo(1);
+$("pvReload").onclick = () => openProxy($("pvAddr").value);
+
+/* ---------- AI helper ---------- */
+let chatMsgs = [], mode = "chat", busy = false;
+const PLACEHOLDERS = {
+  chat: "Ask any school question...",
+  explain: "What should I explain? (e.g. photosynthesis, the French Revolution)",
+  essay: "Essay topic, length and details (e.g. 500 words on the causes of WW1)",
+  analyze: "Paste the text, poem or passage to analyze...",
+  summarize: "Paste the text to summarize...",
+  grammar: "Paste your writing to fix...",
+};
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function inline(s) {
+  return s.replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, "$1<i>$2</i>");
+}
+function md(src) {
+  const lines = esc(src).split("\n"); let html = "", list = null, code = false, buf = [];
+  const closeList = () => { if (list) { html += "</" + list + ">"; list = null; } };
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      if (code) { html += "<pre><code>" + buf.join("\n") + "</code></pre>"; buf = []; code = false; } else { closeList(); code = true; }
+      continue;
+    }
+    if (code) { buf.push(line); continue; }
+    let m;
+    if ((m = line.match(/^(#{1,6})\s+(.*)/))) { closeList(); const n = Math.min(m[1].length + 2, 6); html += `<h${n}>${inline(m[2])}</h${n}>`; }
+    else if ((m = line.match(/^\s*[-*•]\s+(.*)/))) { if (list !== "ul") { closeList(); html += "<ul>"; list = "ul"; } html += "<li>" + inline(m[1]) + "</li>"; }
+    else if ((m = line.match(/^\s*(\d+)[.)]\s+(.*)/))) { if (list !== "ol") { closeList(); html += '<ol start="' + m[1] + '">'; list = "ol"; } html += "<li>" + inline(m[2]) + "</li>"; }
+    else if (/^\s*(\*\*\*|---|___)\s*$/.test(line)) { closeList(); html += "<hr>"; }
+    else if (!line.trim()) { closeList(); }
+    else { closeList(); html += "<p>" + inline(line) + "</p>"; }
+  }
+  if (code) html += "<pre><code>" + buf.join("\n") + "</code></pre>";
+  closeList();
+  return html;
+}
+
+function scrollChat() { const c = $("chat"); c.scrollTop = c.scrollHeight; }
+function addBubble(role, text, image) {
+  const hello = $("chat").querySelector(".hello"); if (hello) hello.remove();
+  const b = document.createElement("div"); b.className = "bubble " + role;
+  if (role === "user") {
+    if (image) { const im = document.createElement("img"); im.src = image; b.appendChild(im); }
+    if (text) b.appendChild(document.createTextNode(text));
+  } else b.innerHTML = text;
+  $("chat").appendChild(b); scrollChat(); return b;
+}
+
+/* pictures: shrink to max 1280px JPEG so uploads stay small */
+let pendingImage = null;
+function loadPicture(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    pendingImage = c.toDataURL("image/jpeg", 0.85);
+    $("attachImg").src = pendingImage; $("attachPreview").classList.remove("hidden");
+    $("prompt").focus();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); alert("Couldn't read that picture."); };
+  img.src = url;
+}
+function clearPicture() { pendingImage = null; $("attachPreview").classList.add("hidden"); $("attachImg").removeAttribute("src"); }
+function resetChat() {
+  chatMsgs = []; $("chat").innerHTML =
+    '<div class="hello"><b>Hi! I\'m your study helper.</b><br>Ask me homework questions, have me explain a topic, write or improve an essay, or paste a text for me to analyze.</div>';
+}
+function setMode(m) {
+  mode = m;
+  for (const b of $("modes").querySelectorAll("[data-mode]")) b.classList.toggle("on", b.dataset.mode === m);
+  $("prompt").placeholder = PLACEHOLDERS[m]; $("prompt").focus();
+}
+function errText(code) {
+  return {
+    slow_down: "Whoa, slow down! Wait a minute and try again.",
+    ai_limit: "The AI is out of energy for today. Try again tomorrow.",
+    other_device: "This account is locked to another computer.",
+    account_gone: "This account has been removed.",
+    logged_out: "You've been logged out. Click Log out, then log in again.",
+    network: "Can't reach the AI. Check your internet and try again.",
+  }[code] || "Something went wrong. Try again.";
+}
+
+function payload() {
+  // only the newest picture is uploaded; older ones become a short note
+  let last = -1; chatMsgs.forEach((m, i) => { if (m.image) last = i; });
+  return chatMsgs.map((m, i) => m.image && i !== last
+    ? { role: m.role, content: "[I sent a picture earlier]\n" + m.content }
+    : m);
+}
+
+async function send() {
+  const text = $("prompt").value.trim();
+  const image = pendingImage;
+  if ((!text && !image) || busy) return;
+  busy = true; $("send").disabled = true;
+  const msg = { role: "user", content: text || "Look at this picture and help me with it." };
+  if (image) msg.image = image;
+  chatMsgs.push(msg);
+  addBubble("user", text, image);
+  $("prompt").value = ""; autoGrow(); clearPicture();
+  const bubble = addBubble("assistant", '<span class="thinking">Thinking...</span>');
+  let out = "";
+  try {
+    let res;
+    try {
+      res = await fetch(API + "/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: TOKEN, device: deviceId(), mode, messages: payload() }) });
+    } catch { throw new Error("network"); }
+    if (!(res.headers.get("content-type") || "").includes("event-stream")) {
+      const d = await res.json().catch(() => ({})); throw new Error(d.error || "ai_error");
+    }
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (!line.startsWith("data:")) continue;
+        const d = line.slice(5).trim(); if (d === "[DONE]") continue;
+        try { const j = JSON.parse(d); out += j.response ?? j.choices?.[0]?.delta?.content ?? ""; } catch {}
+      }
+      if (out) { bubble.innerHTML = md(out); scrollChat(); }
+    }
+    if (!out) throw new Error("ai_error");
+    chatMsgs.push({ role: "assistant", content: out });
+    const copy = document.createElement("button"); copy.className = "copy"; copy.textContent = "Copy";
+    copy.onclick = () => { navigator.clipboard?.writeText(out).then(() => { copy.textContent = "Copied!"; setTimeout(() => copy.textContent = "Copy", 1500); }); };
+    bubble.appendChild(copy);
+  } catch (e) {
+    chatMsgs.pop();
+    if (!out) {
+      bubble.classList.add("err"); bubble.textContent = errText(e.message);
+      $("prompt").value = text; autoGrow();
+      if (image) { pendingImage = image; $("attachImg").src = image; $("attachPreview").classList.remove("hidden"); }
+    }
+  } finally { busy = false; $("send").disabled = false; scrollChat(); }
+}
+
+function autoGrow() {
+  const t = $("prompt"); t.style.height = "auto";
+  t.style.height = Math.min(t.scrollHeight, 200) + "px";
+  t.style.overflowY = t.scrollHeight > 200 ? "auto" : "hidden";
+}
+
+/* ---------- panic button ---------- */
+let panic = { key: "", url: "" }, listening = false, draftKey = "";
+try { panic = Object.assign(panic, JSON.parse(store("gv_panic") || "{}")); } catch {}
+
+function comboOf(e) {
+  if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return "";
+  const k = e.key === " " ? "Space" : e.key.length === 1 ? e.key.toUpperCase() : e.key;
+  return [e.ctrlKey && "Ctrl", e.altKey && "Alt", e.shiftKey && e.key.length > 1 && "Shift", e.metaKey && "Meta", k].filter(Boolean).join("+");
+}
+function isTyping(e) {
+  const t = e.target, tag = (t && t.tagName) || "";
+  return tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable);
+}
+function goPanic() {
+  if (!panic.url) return;
+  document.documentElement.style.display = "none";  // hide instantly, before the new site loads
+  try { document.title = ""; } catch {}
+  location.replace(panic.url);                     // replaces this page in history, so Back skips it
+}
+function onPanicKey(e) {
+  if (listening || !panic.key || !panic.url) return;
+  const combo = comboOf(e);
+  if (!combo || combo !== panic.key) return;
+  // a plain letter/number key shouldn't fire while someone is typing in a text box
+  if (combo.length === 1 && isTyping(e)) return;
+  e.preventDefault(); e.stopPropagation();
+  goPanic();
+}
+document.addEventListener("keydown", onPanicKey, true);
+
+function showPanicSettings() {
+  draftKey = panic.key;
+  $("panicKey").textContent = panic.key || "Not set";
+  $("panicUrl").value = panic.url || "";
+  $("panicMsg").textContent = panic.key && panic.url ? "On" : "Off";
+}
+$("panicBtn").onclick = () => {
+  $("suggestBox").classList.add("hidden");
+  $("panicBox").classList.toggle("hidden");
+  showPanicSettings();
+};
+$("panicKey").onclick = () => {
+  listening = true;
+  $("panicKey").classList.add("listening"); $("panicKey").textContent = "Press a key...";
+};
+document.addEventListener("keydown", (e) => {
+  if (!listening) return;
+  e.preventDefault(); e.stopPropagation();
+  const combo = comboOf(e);
+  if (!combo) return; // only a modifier so far, wait for the real key
+  listening = false; draftKey = combo === "Escape" && !e.ctrlKey ? draftKey : combo;
+  if (combo === "Escape") $("panicHint").textContent = "Esc can't be used (it exits fullscreen). Pick another key.";
+  else $("panicHint").textContent = "Click, then press a key or combo";
+  $("panicKey").classList.remove("listening"); $("panicKey").textContent = draftKey || "Not set";
+}, true);
+$("panicSave").onclick = () => {
+  let url = $("panicUrl").value.trim();
+  if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
+  try { if (url) new URL(url); } catch { $("panicMsg").textContent = "That link doesn't look right."; return; }
+  if (!draftKey || !url) { $("panicMsg").textContent = "Set both a key and a link."; return; }
+  panic = { key: draftKey, url };
+  store("gv_panic", JSON.stringify(panic));
+  $("panicUrl").value = url;
+  $("panicMsg").textContent = "Saved! Press " + draftKey + " any time.";
+};
+$("panicTest").onclick = () => {
+  let url = $("panicUrl").value.trim();
+  if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
+  if (!url) { $("panicMsg").textContent = "Put in a link first."; return; }
+  panic.url = url; goPanic();
+};
+$("panicOff").onclick = () => {
+  panic = { key: "", url: "" }; draftKey = ""; store("gv_panic", null);
+  showPanicSettings(); $("panicMsg").textContent = "Panic key turned off.";
+};
+
+/* ---------- wiring ---------- */
+$("authForm").addEventListener("submit", (e) => { e.preventDefault(); submitAuth(); });
+$("tabLogin").onclick = () => setAuthMode(false);
+$("tabSignup").onclick = () => setAuthMode(true);
+$("username").addEventListener("input", (e) => { e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""); });
+$("code").addEventListener("input", (e) => {
+  const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16);
+  e.target.value = raw.match(/.{1,4}/g)?.join("-") || "";
+});
+$("logout").onclick = () => { store("gv_token", null); location.reload(); };
+if (CONTACT && CONTACT.includes("@")) {
+  $("buyBox").classList.remove("hidden");
+  $("buyMail").textContent = CONTACT;
+  $("buyMail").href = "mailto:" + CONTACT + "?subject=" + encodeURIComponent("I want to buy a Math Study code");
+  $("buyCopy").onclick = () => navigator.clipboard?.writeText(CONTACT).then(() => {
+    $("buyCopy").textContent = "Copied!"; setTimeout(() => $("buyCopy").textContent = "Copy", 1500);
+  });
+  $("suggestBtn").classList.remove("hidden");
+  $("mailAddr").textContent = CONTACT;
+  $("mailOpen").href = "mailto:" + CONTACT + "?subject=" + encodeURIComponent("Math Study suggestion");
+  $("suggestBtn").onclick = () => { $("panicBox").classList.add("hidden"); $("suggestBox").classList.toggle("hidden"); };
+  $("mailCopy").onclick = () => navigator.clipboard?.writeText(CONTACT).then(() => {
+    $("mailCopy").textContent = "Copied!"; setTimeout(() => $("mailCopy").textContent = "Copy", 1500);
+  });
+}
+$("ovClose").onclick = closeOverlay;
+$("ovFull").onclick = () => $("overlay").requestFullscreen?.();
+for (const b of $("modes").querySelectorAll("[data-mode]")) b.onclick = () => setMode(b.dataset.mode);
+$("newChat").onclick = () => { if (!busy) { resetChat(); clearPicture(); } };
+$("attachBtn").onclick = () => { $("imgPick").value = ""; $("imgPick").click(); };
+$("imgPick").onchange = () => loadPicture($("imgPick").files[0]);
+$("attachRemove").onclick = clearPicture;
+document.addEventListener("paste", (e) => {
+  if ($("aiPanel").classList.contains("hidden")) return;
+  for (const item of e.clipboardData?.items || []) {
+    if (item.type.startsWith("image/")) { e.preventDefault(); loadPicture(item.getAsFile()); return; }
+  }
+});
+const aiPanel = $("aiPanel");
+aiPanel.addEventListener("dragover", (e) => { e.preventDefault(); aiPanel.classList.add("dragging"); });
+aiPanel.addEventListener("dragleave", (e) => { if (!aiPanel.contains(e.relatedTarget)) aiPanel.classList.remove("dragging"); });
+aiPanel.addEventListener("drop", (e) => { e.preventDefault(); aiPanel.classList.remove("dragging"); loadPicture(e.dataTransfer.files[0]); });
+$("send").onclick = send;
+$("prompt").addEventListener("input", autoGrow);
+$("prompt").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+
+store("gv_code", null); // from the old code-only version
+const savedToken = store("gv_token");
+if (savedToken) resumeSession(savedToken);
+</script>
+<button id="installApp" class="primary" style="display:none;position:fixed;right:16px;bottom:16px;z-index:30;border-radius:999px;padding:10px 18px;box-shadow:0 6px 20px rgba(0,0,0,.4)">Install app</button>
+<script>
+// Web version -> real app: Chrome/Edge offer "Install app", which puts Algebra Notes on the computer
+// (own window and icon, no browser tabs). Not shown inside the Windows .exe or once installed.
+(function () {
+  var inApp = /Electron/i.test(navigator.userAgent);
+  var installed = matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: window-controls-overlay)").matches;
+  if (installed) document.title = "Algebra Notes";
+  if (inApp || location.protocol !== "https:") return;
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
+  var ask = null, btn = document.getElementById("installApp");
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); ask = e; if (!installed) btn.style.display = "block"; });
+  window.addEventListener("appinstalled", function () { btn.style.display = "none"; ask = null; });
+  btn.onclick = function () { if (!ask) return; ask.prompt(); ask.userChoice.finally(function () { ask = null; btn.style.display = "none"; }); };
+})();
+</script>
+<script>
+// Disguise: every word on screen gets number swaps (o->0, i->1, e->3, a->4, s->5) and "vault" says "study".
+// Skipped: the "Math Study" titles, usernames, links/notes under the Proxy bar, the address bar and AI chat answers.
+(function () {
+  var MAP = { a: "4", A: "4", e: "3", E: "3", i: "1", I: "1", o: "0", O: "0", s: "5", S: "5" };
+  var SKIP = "script,style,textarea,input,select,iframe,canvas,code,[data-nl],#chat,#proxyNote,#who,#pvAddr,#buyMail,#mailAddr";
+  function swap(t) {
+    return t.replace(/\bvaults?\b/gi, function (w) { return w[0] === "V" ? "Study" : "study"; })
+            .replace(/[aeiosAEIOS]/g, function (c) { return MAP[c]; });
+  }
+  function skip(el) { return !el || (el.closest && el.closest(SKIP)); }
+  function doText(n) {
+    if (skip(n.parentElement)) return;
+    var v = n.nodeValue, s = swap(v);
+    if (s !== v) n.nodeValue = s;
+  }
+  function doEl(el) {
+    if (skip(el)) return;
+    ["placeholder", "title", "aria-label"].forEach(function (a) {
+      var v = el.getAttribute && el.getAttribute(a);
+      if (v) { var s = swap(v); if (s !== v) el.setAttribute(a, s); }
+    });
+  }
+  function walk(root) {
+    if (root.nodeType === 3) return doText(root);
+    if (root.nodeType !== 1 || skip(root)) return;
+    doEl(root);
+    var all = root.querySelectorAll("*");
+    for (var i = 0; i < all.length; i++) doEl(all[i]);
+    var tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n;
+    while ((n = tw.nextNode())) doText(n);
+  }
+  walk(document.body);
+  new MutationObserver(function (list) {
+    list.forEach(function (m) {
+      if (m.type === "characterData") doText(m.target);
+      else if (m.type === "attributes") doEl(m.target);
+      else m.addedNodes.forEach(walk);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "title", "aria-label"] });
+})();
+</script>
+</body>
+</html>
