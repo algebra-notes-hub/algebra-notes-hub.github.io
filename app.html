@@ -281,7 +281,7 @@
 <script>
 const API = "https://math-study.mathstudyhelp.workers.dev";
 // Library copies, tried in order: GitHub Pages, jsDelivr (GitHub CDN), Cloudflare.
-const LIBS = ["https://algebra-notes-hub.github.io/notes-site", "https://cdn.jsdelivr.net/gh/algebra-notes-hub/notes-site@main", "https://math-study-library.mathstudyhelp.workers.dev"].filter((u) => /^https:\/\//.test(u));
+const LIBS = ["https://algebra-notes-hub.github.io", "https://cdn.jsdelivr.net/gh/algebra-notes-hub/algebra-notes-hub.github.io@main", "https://math-study-library.mathstudyhelp.workers.dev"].filter((u) => /^https:\/\//.test(u));
 let LIB_AT = 0; // the copy that worked last time gets tried first
 // Tries each library copy until `use(response)` succeeds; returns what `use` returned.
 async function fromLib(path, use, opts) {
