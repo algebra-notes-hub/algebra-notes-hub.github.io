@@ -280,7 +280,24 @@
 
 <script>
 const API = "https://math-study.mathstudyhelp.workers.dev";
-const LIB = "https://math-study-library.mathstudyhelp.workers.dev";
+// Library copies, tried in order: GitHub Pages, jsDelivr (GitHub CDN), Cloudflare.
+const LIBS = ["https://shaurma1310777-maker.github.io/notes-site", "https://cdn.jsdelivr.net/gh/shaurma1310777-maker/notes-site@main", "https://math-study-library.mathstudyhelp.workers.dev"].filter((u) => /^https:\/\//.test(u));
+let LIB_AT = 0; // the copy that worked last time gets tried first
+// Tries each library copy until `use(response)` succeeds; returns what `use` returned.
+async function fromLib(path, use, opts) {
+  let lastErr = new Error("library");
+  for (let k = 0; k < LIBS.length; k++) {
+    const i = (LIB_AT + k) % LIBS.length;
+    try {
+      const res = await fetch(LIBS[i] + path, opts);
+      if (!res.ok) throw new Error(res.status);
+      const out = await use(res);
+      LIB_AT = i;
+      return out;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
 const CONTACT = "";
 const CHUNK = 4 * 1024 * 1024;
 const $ = (id) => document.getElementById(id);
@@ -359,13 +376,13 @@ function setAuthMode(isSignup) {
 async function enterVault(data) {
   KEY = await crypto.subtle.importKey("raw", hexToBytes(data.key), "AES-GCM", false, ["decrypt"]);
   // the library list lives online, so new stuff shows up without a new vault file
-  const res = await fetch(LIB + "/catalog.bin?t=" + Date.now(), { cache: "no-store" });
-  if (!res.ok) throw new Error("library");
-  const raw = new Uint8Array(await res.arrayBuffer());
-  const prefix = btoa(String.fromCharCode(...raw.subarray(0, 8)));
-  const cat = raw.subarray(8);
-  const parts = await decrypt(prefix, cat.length, async (s, e) => cat.subarray(s, e));
-  const all = JSON.parse(await new Blob(parts).text());
+  const all = await fromLib("/catalog.bin?t=" + Date.now(), async (res) => {
+    const raw = new Uint8Array(await res.arrayBuffer());
+    const prefix = btoa(String.fromCharCode(...raw.subarray(0, 8)));
+    const cat = raw.subarray(8);
+    const parts = await decrypt(prefix, cat.length, async (s, e) => cat.subarray(s, e));
+    return JSON.parse(await new Blob(parts).text());
+  }, { cache: "no-store" });
   const note = all.find((it) => it.section === "__note");
   $("proxyNote").textContent = note ? note.text : "";
   $("proxyNote").classList.toggle("hidden", !note);
@@ -496,14 +513,15 @@ const opened = new Map(); // already-unlocked small items, so opening them again
 async function fetchItem(it, onProgress) {
   const prefix = b64ToBytes(it.prefix), parts = [];
   for (let n = 0; n < it.chunks; n++) {
-    let res, tries = 0;
+    const iv = new Uint8Array(12); iv.set(prefix, 0); new DataView(iv.buffer).setUint32(8, n);
+    let part, tries = 0;
     for (;;) {
-      try { res = await fetch(LIB + "/i/" + it.id + "/" + n); if (res.ok) break; } catch {}
+      // a piece only counts if it unlocks, so a stale or broken copy falls through to the next one
+      try { part = await fromLib("/i/" + it.id + "/" + n, async (res) => crypto.subtle.decrypt({ name: "AES-GCM", iv }, KEY, await res.arrayBuffer())); break; } catch {}
       if (++tries >= 3) throw new Error("download");
       await new Promise(r => setTimeout(r, 800 * tries));
     }
-    const iv = new Uint8Array(12); iv.set(prefix, 0); new DataView(iv.buffer).setUint32(8, n);
-    parts.push(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, KEY, await res.arrayBuffer()));
+    parts.push(part);
     onProgress((n + 1) / it.chunks);
   }
   return new Blob(parts, { type: it.mime });
